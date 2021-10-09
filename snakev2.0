@@ -1,0 +1,129 @@
+const c = document.getElementById("canvas");
+const ctx = c.getContext("2d");
+const w = 30;
+const h = 30;
+const W = 630;
+const H = 630;
+const rows = H/h;
+const cols = W/w;
+let speed = 60
+const game = {
+    state: 'running'
+}
+const dir = {x:0, y:-1}
+const pooIcon = {
+    x: null, 
+    y: null,
+    icon: null
+}
+
+const snake = {
+    body:[
+        {x:11, y:11},
+        {x:11, y:12},
+        {x:11, y:13},
+        {x:11, y:14},
+        {x:11, y:15}
+    ], 
+    colour:('#800080')
+}
+
+window.addEventListener('keydown', e => {
+    switch (e.key) {
+      case 'ArrowUp':    onKey(0, -1); break
+      case 'ArrowLeft':  onKey(-1, 0); break
+      case 'ArrowDown':  onKey(0, 1); break
+      case 'ArrowRight': onKey(1, 0); break
+    }
+  })
+
+
+
+function onKey(dx, dy) {
+    dir.x = dx;
+    dir.y = dy;
+}
+
+function clear(){
+    canvas.width = W;
+    canvas.height = H;
+}
+
+
+function drawSnake(fill, stroke){
+    for (let i = snake.body.length -1; i > 0; i--) {
+        snake.body[i] = {
+            x: snake.body[i -1].x,
+            y: snake.body[i -1].y
+        }
+    }
+    const s = snake.body[0]
+    s.x += dir.x;
+    s.y += dir.y;
+    
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1
+    
+    snake.body.forEach(s =>{
+        ctx.rect(s.x* w, s.y* h, w, h);
+        ctx.fill();
+        ctx.stroke();
+    } )
+}
+
+function setIcon(){
+    pooIcon.x = Math.floor(Math.random()* cols);
+    pooIcon.y = Math.floor(Math.random()* rows);
+    pooIcon.img = 'poo'
+    pooIcon.active = true
+    clearIconTimeout = setTimeout(clearIcon, 3000) 
+}
+
+function clearIcon(){
+    pooIcon.active = false
+    iconTimeout = setTimeout(setIcon, 3000)
+}
+
+function drawIcon(){
+    if(!pooIcon.active){
+        console.log('no icon');
+        return
+    }    
+    let img = document.getElementById(pooIcon.img)
+    ctx.drawImage(img, pooIcon.x* w, pooIcon.y* h, w, h);
+}
+
+function gameOver(){
+    console.log('Game Over')
+    drawSnake('red', 'white')   
+    clearTimeout(clearIconTimeout)
+    clearTimeout(iconTimeout)
+    document.getElementById('canvas').classList.add('shake')
+}
+
+
+function run(){
+    if(game.state != 'running'){
+        return;
+    }
+    const s = snake.body[0]
+    // checking game boundries
+    if(s.x < 0 || s.y < 0 || s.x > cols -1 || s.y > rows -1){
+        gameOver();
+        return;
+    }
+    if(pooIcon.active && s.x == pooIcon.x && s.y == pooIcon.y){
+        gameOver();
+        return;
+    }
+    clear();
+    drawIcon()
+    drawSnake(snake.colour, 'white')
+    
+    setTimeout(run, speed)
+}
+
+run()
+let iconTimeout = setTimeout(setIcon, 1000)
+let clearIconTimeout
